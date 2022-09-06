@@ -21,6 +21,7 @@ Images/*
 Graphics/*
 Data/*
 Dataout/*
+Archive/*
 
 #no data
 *.csv
