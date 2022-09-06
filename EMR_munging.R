@@ -18,8 +18,6 @@ library(ggtext)
 library(glue)
 library(purrr)
 
-setwd("~/GitHub/Scripts_NPetrovic")
-
 # IMPORT ------------------------------------------------------------------
 
 ## Data downloaded from Genie using parameters: 
