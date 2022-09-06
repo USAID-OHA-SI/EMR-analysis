@@ -1,9 +1,9 @@
-# PROJECT: Munging  
+# PROJECT: Munging EMR data & indicator data into usable format
 # AUTHOR:   N.Petrovic | USAID
-# PURPOSE:  
+# PURPOSE:  Analyzing relationship between EMR and patient outcomes
 # LICENSE:  MIT
-# DATE:     2022-
-# UPDATED:  2022-
+# DATE:     2022-9-6
+# UPDATED:  2022-9-6
 
 # DEPENDENCIES ------------------------------------------------------------
 
