@@ -25,7 +25,7 @@ library(purrr)
         #Years - 2017,2018,2019,2020,2021 (EMR is annual so no 2022 data yet)
         #Stddisagg - Total Numerator, Total Denominator, Service Delivery Area
         #Frozen
-## Data set (1,010,760) is just barely under excel limit of 1,048,576. When it goes
+## Data set (965,879) is just barely under excel limit of 1,048,576. When it goes
 ## over could select a smaller subset of indicators
 
 df_all<- si_path() %>% 
