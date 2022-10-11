@@ -51,22 +51,21 @@ HTS_all<-sort(str_subset(unique(df_all$indicator), "HTS_"))
 HTS_all<-HTS_all[HTS_all!="HTS_RECENT"]
 
 ## Initial indicator list
-indicator_init_ls<-c("EMR_SITE", TX_ML_all,"TX_CURR", "TX_NEW", "TX_PVLS") 
+indicator_init_ls<-c("EMR_SITE", TX_ML_all,"TX_CURR", "TX_NEW", "TX_PVLS", "TX_RTT","HRH_CURR") 
 
 ## Standardized disaggregates -- Service Delivery Area is std disagg for EMR
 ## Total Num/Denom for all other indicators of interest
 std_disagg_ls<-c("Service Delivery Area", "Total Numerator", "Total Denominator")
 
 ## Info needed for each unique piece of data
-cols_ls<-c("orgunituid","sitename", "sitetype", "psnu", "psnuuid", "country",
-           "prime_partner_name", "prime_partner_uei", "mech_name", "mech_code", "funding_agency", 
-           "communityuid", "community", "facilityuid", "facility", 
-           "fiscal_year")
+cols_ls<-c("country", "psnu", "country", "fiscal_year","facility", "facilityuid")
 
 
 df<-df_all %>% filter(indicator %in% indicator_init_ls, standardizeddisaggregate %in% std_disagg_ls, 
                       ## Remove data that is above site level
-                      sitename!="Data reported above Site level", typemilitary!="Y", is.na(targets)) %>%
+                      sitename!="Data reported above Site level", typemilitary!="Y", is.na(targets),
+                      ## Facility only, remove community
+                      sitetype=="Facility") %>%
                       ## Create denominator for TX_PVLS_D
                       mutate(indicator=case_when(indicator=="TX_PVLS" & numeratordenom=="N"~"TX_PVLS_N",
                                        indicator=="TX_PVLS" & numeratordenom=="D"~"TX_PVLS_D",
@@ -76,22 +75,25 @@ df<-df_all %>% filter(indicator %in% indicator_init_ls, standardizeddisaggregate
                                                  TRUE ~ indicator)) %>%
                       ## Drop numerator/denom -- note that assumption is that only indicator w/ denom is TX_PVLS
                       select(-numeratordenom) %>%
+                      ## Aggregate to facility level
+                      group_by(country, psnu, fiscal_year, indicator, facility, facilityuid) %>%
+                      summarise(across(matches("cumulative"), sum, na.rm = TRUE)) %>%
                       ## Pivot all selected indicators into columns. Any redundant values (due to dropping indicatortype)
                       ## are summed.  
                       select(c(cols_ls,"indicator","cumulative")) %>%
                       pivot_wider(names_from=indicator, values_from =cumulative, id_cols = cols_ls,
                                   values_fn=sum) %>%
-                      arrange(sitename, fiscal_year) %>%
+                      arrange(facility, fiscal_year) %>%
                       ## Create a total value of EMR that sums over all different types of EMR in a site
                       mutate(EMR_SITE_TOTAL=rowSums(across(starts_with("EMR_SITE")),na.rm=TRUE)) 
                       ## Clean up names
                       names(df)<-str_remove(names(df), " Service Delivery Area")
                       ## Reorder to preferred order for indicators
                       df <- df %>%
-                      select(cols_ls,c("EMR_SITE_TOTAL", "EMR_SITE - ANC and/or Maternity", "EMR_SITE - Care and Treatment", 
+                      select(all_of(cols_ls),c("EMR_SITE_TOTAL", "EMR_SITE - ANC and/or Maternity", "EMR_SITE - Care and Treatment", 
                                         "EMR_SITE - Early Infant Diagnosis not Ped ART", "EMR_SITE - HIV Testing Services", 
                                         "EMR_SITE - HIV/TB"),                
-                                        TX_ML_all, c("TX_CURR", "TX_NEW", "TX_PVLS_N", "TX_PVLS_D")) 
+                                        all_of(TX_ML_all), c("TX_CURR", "TX_NEW", "TX_RTT", "TX_PVLS_N", "TX_PVLS_D", "HRH_CURR")) 
 
                       write.csv(df,file="Dataout/msd_emr_data.csv",row.names=FALSE)
 
